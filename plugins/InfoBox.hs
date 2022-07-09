@@ -18,46 +18,24 @@ module InfoBox (plugin) where
 
 import Network.Gitit.Interface
 import Data.Char (toLower)
-import Data.Text (pack, unpack)
+import Data.Text (pack, unpack, isPrefixOf, index)
 import Data.List.Split
 
 plugin :: Plugin
 plugin = mkPageTransform transformBlock
 
--- Multiple lines of row desriptions to list of Rows
-createTableRows :: String -> [Row]
-createTableRows tableRowDescriptions =
-    map (createRow . createCells) (lines tableRowDescriptions)
+getTitle :: String -> String
+getTitle metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "title") 
 
-createRow :: [Cell] -> Row
-createRow cells = Row ("trow1.2", [], []) cells
+getValueFromMetaDataLine :: String -> String
+getValueFromMetaDataLine metaDataLine = (splitOn "=" metaDataLine) !! 1
 
--- Single line to one (when heading) or multiple Cells
-createCells :: String -> [Cell]
-createCells line =
-    map createCell (splitOn "=" line)
-
-createCell :: String -> Cell
-createCell content = Cell ("tcell1.2a", [], []) AlignLeft (RowSpan 1) (ColSpan 1) [Plain [(Str (pack content))]]
-
-createTable :: [Row] -> Block
-createTable rows = Table
-    ("ttable", [], [])
-    (Caption (Just [(Str "some caption")]) [])
-    [(AlignLeft,ColWidth 20), (AlignLeft,ColWidthDefault)]
-    (TableHead ("thead", [], []) [
-        Row ("theadrow1", [], []) [
-            Cell ("theadcell1", [], []) AlignLeft (RowSpan 1) (ColSpan 1) [Plain [(Str "Header col 1")]]
-        ]
-    ])
-    [TableBody ("tbody1", [], []) (RowHeadColumns 0) rows rows]
-    (TableFoot ("tfoot", [], []) [])
-
-transformBlock :: Block -> Block
-transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
-    createTable (createTableRows tableRows)
-    where
-        [metaData, tableRows] = splitOn "---" (unpack contents)
+getMetaDataLine :: String -> String -> String
+getMetaDataLine metaDataLines metaDataType =      -- "title=Terra Nova" 
+            unpack (head (filter -- ["title=Terra Nova"]
+                (isPrefixOf (pack metaDataType))
+                (map pack (lines metaDataLines)) -- ["title=Terra Nova", "image=./bla.png", …]
+            ))
 
     -- return $ Table
     --     ("ttable", [], [])
@@ -91,4 +69,9 @@ transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` cl
     --         ]
     --     ]]
     --     (TableFoot ("tfoot", [], []) [])
+transformBlock :: Block -> Block
+transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
+    RawBlock "HTML" (pack ("<table><tr><td>" ++ getTitle metaData ++ "</td></tr></table>"))
+    where
+        [metaData, tableRows] = splitOn "---" (unpack contents)
 transformBlock x = x
