@@ -8,6 +8,7 @@ module InfoBox (plugin) where
 -- title=Terra Nova
 -- imageURL= ./bla.png
 -- imageCaption=Image of Terra nova
+-- ---
 -- heading=Characteristics
 -- field=Radius=40k
 -- field=Inhabitants=40 million
@@ -18,13 +19,16 @@ module InfoBox (plugin) where
 import Network.Gitit.Interface
 import Data.Char (toLower)
 import Data.Text (pack, unpack)
+import Data.List.Split
 
 plugin :: Plugin
 plugin = mkPageTransform transformBlock
 
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
-    Div ("test", [], []) (map (Para . (:[]) . Str . pack) (lines (unpack contents)))    
+    Div ("test", [], []) (map (Para . (:[]) . Str . pack) (lines metaData))
+    where
+        [metaData, tableRows] = splitOn "---" (unpack contents)
 
     -- return $ Table
     --     ("ttable", [], [])
