@@ -12,5 +12,5 @@ plugin :: Plugin
 plugin = mkPageTransform transformBlock
 
 transformBlock :: Block -> Block
-transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes = Para [(Str "tests")]
+transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes = RawBlock "HTML" (pack "<div>tests</div>")
 transformBlock x = x
