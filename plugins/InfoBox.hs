@@ -24,6 +24,12 @@ import Data.List.Split
 plugin :: Plugin
 plugin = mkPageTransform transformBlock
 
+getImageURL :: String -> String
+getImageURL metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "imageURL") 
+
+getImageCaption :: String -> String
+getImageCaption metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "imageCaption") 
+
 getTitle :: String -> String
 getTitle metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "title") 
 
@@ -71,7 +77,14 @@ getMetaDataLine metaDataLines metaDataType =      -- "title=Terra Nova"
     --     (TableFoot ("tfoot", [], []) [])
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
-    RawBlock "HTML" (pack ("<table><tr><td>" ++ getTitle metaData ++ "</td></tr></table>"))
+    RawBlock "HTML" (pack ("\
+    \<aside>\n\
+        \<h2>" ++ getTitle metaData ++ "</h2>\n\
+        \<figure>\n\
+            \<img src=\"" ++ getImageURL metaData ++ "\" />\n\
+            \<figcaption>" ++ getImageCaption metaData ++ "</figcaption>\n\
+        \</figure>\n\
+        \<table><tr><td>" ++ getTitle metaData ++ "</td></tr></table>"))
     where
         [metaData, tableRows] = splitOn "---" (unpack contents)
 transformBlock x = x
