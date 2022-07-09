@@ -24,9 +24,38 @@ import Data.List.Split
 plugin :: Plugin
 plugin = mkPageTransform transformBlock
 
+-- Multiple lines of row desriptions to list of Rows
+createTableRows :: String -> [Row]
+createTableRows tableRowDescriptions =
+    map (createRow . createCells) (lines tableRowDescriptions)
+
+createRow :: [Cell] -> Row
+createRow cells = Row ("trow1.2", [], []) cells
+
+-- Single line to one (when heading) or multiple Cells
+createCells :: String -> [Cell]
+createCells line =
+    map createCell (splitOn "=" line)
+
+createCell :: String -> Cell
+createCell content = Cell ("tcell1.2a", [], []) AlignLeft (RowSpan 1) (ColSpan 1) [Plain [(Str (pack content))]]
+
+createTable :: [Row] -> Block
+createTable rows = Table
+    ("ttable", [], [])
+    (Caption (Just [(Str "some caption")]) [])
+    [(AlignLeft,ColWidth 20), (AlignLeft,ColWidthDefault)]
+    (TableHead ("thead", [], []) [
+        Row ("theadrow1", [], []) [
+            Cell ("theadcell1", [], []) AlignLeft (RowSpan 1) (ColSpan 1) [Plain [(Str "Header col 1")]]
+        ]
+    ])
+    [TableBody ("tbody1", [], []) (RowHeadColumns 0) rows rows]
+    (TableFoot ("tfoot", [], []) [])
+
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
-    Div ("test", [], []) (map (Para . (:[]) . Str . pack) (lines metaData))
+    createTable (createTableRows tableRows)
     where
         [metaData, tableRows] = splitOn "---" (unpack contents)
 
