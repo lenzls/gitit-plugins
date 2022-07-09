@@ -12,5 +12,14 @@ plugin :: Plugin
 plugin = mkPageTransform transformBlock
 
 transformBlock :: Block -> Block
-transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes = RawBlock "HTML" (pack "<div>tests</div>")
+transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
+    Table
+        ("ttable", [], [])
+        (Caption (Just [(Str "some caption")]) [])
+        [(AlignLeft,ColWidth 20), (AlignLeft,ColWidthDefault)]
+        (TableHead ("thead", [], []) [])
+        [TableBody ("tbody1", [], []) (RowHeadColumns 2) [Row ("trow1", [], []) [
+            Cell ("tcell1", [], []) AlignLeft (RowSpan 1) (ColSpan 1) [Plain [(Str "content cell1")]]
+        ]] []]
+        (TableFoot ("tfoot", [], []) [])
 transformBlock x = x
