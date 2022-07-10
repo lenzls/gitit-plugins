@@ -28,15 +28,14 @@ data InfoBoxData = InfoBoxData {
     imageURL :: Maybe String,
     imageCaption :: Maybe String,
     tableRows :: [TableRowData]
-}
-data TableRowData = TableRowData {
-    rowType :: String,
+} deriving Show 
+
+data TableRowData = HeadingRowData {
+    label :: String
+} | FieldRowData {
     label :: String,
     value :: String
-}
-
-serializeInfoBoxData :: InfoBoxData -> String
-serializeInfoBoxData ibd = show (title ibd, imageURL ibd, imageCaption ibd)
+} deriving Show
 
 -- Parses a whole infobox description into an InfoBoxData
 parse :: String -> InfoBoxData
@@ -53,6 +52,7 @@ parseLine lineString infoBoxData
     | rowType == "title" = infoBoxData { title = firstArg }
     | rowType == "imageURL" = infoBoxData { imageURL = (Just firstArg) }
     | rowType == "imageCaption" = infoBoxData { imageCaption = (Just firstArg) }
+    -- | rowType == "heading" = infoBoxData { tableRows += (HeadingRowData firstArg) }
     | otherwise = infoBoxData
     where
         rowType = head (splitOn "|=|" lineString)
@@ -138,6 +138,6 @@ getTableRowType tableRow = head (splitOn "|=|" tableRow)
     --     (TableFoot ("tfoot", [], []) [])
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
-    traceShow (serializeInfoBoxData (parse (unpack contents)))
+    traceShow (parse (unpack contents))
     (Para [Str contents])
 transformBlock x = x
