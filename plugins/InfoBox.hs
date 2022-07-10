@@ -40,8 +40,12 @@ serializeInfoBoxData ibd = show (title ibd, imageURL ibd, imageCaption ibd)
 
 -- Parses a whole infobox description into an InfoBoxData
 parse :: String -> InfoBoxData
-parse description =
-    parseLine (head (lines description)) (InfoBoxData "" Nothing Nothing [])
+parse description = parseLines (lines description)
+
+parseLines :: [String] -> InfoBoxData
+parseLines [] = (InfoBoxData "" Nothing Nothing [])
+parseLines (x:xs) = parseLine x (parseLines xs)
+
 
 -- Parses a line and adds it to existing InfoBoxData
 parseLine :: String -> InfoBoxData -> InfoBoxData
