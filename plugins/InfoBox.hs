@@ -18,7 +18,8 @@ module InfoBox (plugin) where
 
 import Network.Gitit.Interface
 import Data.Char (toLower)
-import Data.Text (pack, unpack, isPrefixOf, index)
+import Data.Text (pack, unpack, isPrefixOf)
+import Data.List (concat)
 import Data.List.Split
 
 plugin :: Plugin
@@ -42,6 +43,27 @@ getMetaDataLine metaDataLines metaDataType =      -- "title=Terra Nova"
                 (isPrefixOf (pack metaDataType))
                 (map pack (lines metaDataLines)) -- ["title=Terra Nova", "image=./bla.png", …]
             ))
+
+getTableRows :: String -> String -- tableRowLines into HTML table rows
+getTableRows tableRowLines =
+    concat (map getTableRow (filter (not . null) (lines tableRowLines)))
+
+
+-- heading=Characteristics
+-- field=Radius=40k
+getTableRow :: String -> String
+getTableRow tableRow
+    | rowType == "heading" = "<tr><th>" ++ heading ++ "</th></tr>"
+    | rowType == "field" = "<tr><td>" ++ label ++ "</td><td>" ++ value ++ "</td></tr>"
+    | otherwise = "<tr><td>Could not interpret rowType:'" ++ tableRow ++ "'</td></tr>"
+    where 
+        rowType = (getTableRowType tableRow)
+        heading = (splitOn "=" tableRow) !! 1
+        label = (splitOn "=" tableRow) !! 1
+        value = (splitOn "=" tableRow) !! 2
+
+getTableRowType :: String -> String
+getTableRowType tableRow = head (splitOn "=" tableRow)
 
     -- return $ Table
     --     ("ttable", [], [])
@@ -77,14 +99,17 @@ getMetaDataLine metaDataLines metaDataType =      -- "title=Terra Nova"
     --     (TableFoot ("tfoot", [], []) [])
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
-    RawBlock "HTML" (pack ("\
-    \<aside>\n\
-        \<h2>" ++ getTitle metaData ++ "</h2>\n\
-        \<figure>\n\
-            \<img src=\"" ++ getImageURL metaData ++ "\" />\n\
-            \<figcaption>" ++ getImageCaption metaData ++ "</figcaption>\n\
-        \</figure>\n\
-        \<table><tr><td>" ++ getTitle metaData ++ "</td></tr></table>"))
+    RawBlock "HTML" (pack (
+    "<aside>\n" ++
+        "<h2>" ++ getTitle metaData ++ "</h2>\n" ++
+        "<figure>\n" ++
+            "<img src=\"" ++ getImageURL metaData ++ "\" />\n" ++
+            "<figcaption>" ++ getImageCaption metaData ++ "</figcaption>\n" ++
+        "</figure>\n" ++
+        "<table>\n" ++
+            (getTableRows tableRows) ++
+        "</table>" ++
+    "</aside>'"))
     where
         [metaData, tableRows] = splitOn "---" (unpack contents)
 transformBlock x = x
