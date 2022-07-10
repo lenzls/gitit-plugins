@@ -69,9 +69,13 @@ serializeToHTML infoBoxData =
             (maybe "" (\x -> "<figcaption>" ++ x ++ "</figcaption>\n") (imageCaption infoBoxData)) ++
         "</figure>\n" ++
         "<table>\n" ++
-            -- (getTableRows tableRows) ++
+            (concat (map serializeRowToHTML (tableRows infoBoxData))) ++
         "</table>" ++
     "</aside>"))
+
+serializeRowToHTML :: TableRowData -> String
+serializeRowToHTML (HeadingRowData label) = "<tr><th class=\"heading\" colspan=\"2\">" ++ label ++ "</th></tr>\n"
+serializeRowToHTML (FieldRowData label value) = "<tr><th>" ++ label ++ "</th><td>" ++ value ++ "</td></tr>\n"
 
 plugin :: Plugin
 plugin = mkPageTransform transformBlock
