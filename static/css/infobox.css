@@ -1,0 +1,8 @@
+/*
+    Styles related t the InfoBox.hs plugin.
+    Please import in your cutom.css like this:
+        @import url("infobox.css");
+*/
+.info-box-table .heading {
+    text-align: center;
+}

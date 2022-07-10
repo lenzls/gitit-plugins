@@ -53,9 +53,9 @@ getTableRows tableRowLines =
 -- field=Radius=40k
 getTableRow :: String -> String
 getTableRow tableRow
-    | rowType == "heading" = "<tr><th>" ++ heading ++ "</th></tr>"
+    | rowType == "heading" = "<tr><th class=\"heading\" colspan=\"2\">" ++ heading ++ "</th></tr>"
     | rowType == "field" = "<tr><td>" ++ label ++ "</td><td>" ++ value ++ "</td></tr>"
-    | otherwise = "<tr><td>Could not interpret rowType:'" ++ tableRow ++ "'</td></tr>"
+    | otherwise = "<tr><td>Could not interpret row:'" ++ tableRow ++ "'</td></tr>"
     where 
         rowType = (getTableRowType tableRow)
         heading = (splitOn "=" tableRow) !! 1
@@ -100,16 +100,16 @@ getTableRowType tableRow = head (splitOn "=" tableRow)
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
     RawBlock "HTML" (pack (
-    "<aside>\n" ++
+    "<aside class=\"info-box\">\n" ++
         "<h2>" ++ getTitle metaData ++ "</h2>\n" ++
         "<figure>\n" ++
             "<img src=\"" ++ getImageURL metaData ++ "\" />\n" ++
             "<figcaption>" ++ getImageCaption metaData ++ "</figcaption>\n" ++
         "</figure>\n" ++
-        "<table>\n" ++
+        "<table class=\"info-box-table\">\n" ++
             (getTableRows tableRows) ++
         "</table>" ++
-    "</aside>'"))
+    "</aside>"))
     where
         [metaData, tableRows] = splitOn "---" (unpack contents)
 transformBlock x = x
