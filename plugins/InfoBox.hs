@@ -52,6 +52,7 @@ parseLine :: String -> InfoBoxData -> InfoBoxData
 parseLine lineString infoBoxData
     | rowType == "title" = infoBoxData { title = firstArg }
     | rowType == "imageURL" = infoBoxData { imageURL = (Just firstArg) }
+    | rowType == "imageCaption" = infoBoxData { imageCaption = (Just firstArg) }
     | otherwise = infoBoxData
     where
         rowType = head (splitOn "|=|" lineString)
