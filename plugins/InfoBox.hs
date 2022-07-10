@@ -45,7 +45,6 @@ parseLines :: [String] -> InfoBoxData
 parseLines [] = (InfoBoxData "" Nothing Nothing [])
 parseLines (x:xs) = parseLine x (parseLines xs)
 
-
 -- Parses a line and adds it to existing InfoBoxData
 parseLine :: String -> InfoBoxData -> InfoBoxData
 parseLine lineString infoBoxData
@@ -59,6 +58,20 @@ parseLine lineString infoBoxData
         rowType = head (splitOn "|=|" lineString)
         firstArg = (splitOn "|=|" lineString) !! 1
         secondArg = (splitOn "|=|" lineString) !! 2
+
+serializeToHTML :: InfoBoxData -> Block
+serializeToHTML infoBoxData =
+    RawBlock "HTML" (pack (
+    "<aside class=\"info-box\">\n" ++
+        "<h2>" ++ title infoBoxData ++ "</h2>\n" ++
+        "<figure>\n" ++
+            (maybe "" (\x -> "<img src=\"" ++ x ++ "\" />\n") (imageURL infoBoxData)) ++
+            (maybe "" (\x -> "<figcaption>" ++ x ++ "</figcaption>\n") (imageCaption infoBoxData)) ++
+        "</figure>\n" ++
+        "<table>\n" ++
+            -- (getTableRows tableRows) ++
+        "</table>" ++
+    "</aside>"))
 
 plugin :: Plugin
 plugin = mkPageTransform transformBlock
@@ -140,5 +153,5 @@ getTableRowType tableRow = head (splitOn "|=|" tableRow)
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
     traceShow (parse (unpack contents))
-    (Para [Str contents])
+    serializeToHTML (parse (unpack contents))
 transformBlock x = x
