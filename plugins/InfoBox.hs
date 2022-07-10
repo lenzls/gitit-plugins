@@ -52,7 +52,7 @@ parseLine lineString infoBoxData
     | rowType == "title" = infoBoxData { title = firstArg }
     | rowType == "imageURL" = infoBoxData { imageURL = (Just firstArg) }
     | rowType == "imageCaption" = infoBoxData { imageCaption = (Just firstArg) }
-    -- | rowType == "heading" = infoBoxData { tableRows += (HeadingRowData firstArg) }
+    | rowType == "heading" = infoBoxData { tableRows = (tableRows infoBoxData) ++ [(HeadingRowData firstArg)] }
     | otherwise = infoBoxData
     where
         rowType = head (splitOn "|=|" lineString)
