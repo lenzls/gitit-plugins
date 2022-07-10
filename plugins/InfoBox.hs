@@ -54,7 +54,7 @@ getTableRows tableRowLines =
 getTableRow :: String -> String
 getTableRow tableRow
     | rowType == "heading" = "<tr><th class=\"heading\" colspan=\"2\">" ++ heading ++ "</th></tr>"
-    | rowType == "field" = "<tr><td>" ++ label ++ "</td><td>" ++ value ++ "</td></tr>"
+    | rowType == "field" = "<tr><th>" ++ label ++ "</th><td>" ++ value ++ "</td></tr>"
     | otherwise = "<tr><td>Could not interpret row:'" ++ tableRow ++ "'</td></tr>"
     where 
         rowType = (getTableRowType tableRow)
