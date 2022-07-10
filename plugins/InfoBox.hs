@@ -5,15 +5,15 @@ module InfoBox (plugin) where
 -- This plugin adds a wikipedia style InfoBox.
 -- Use like this:
 -- ~~~ {.infobox}
--- title=Terra Nova
--- imageURL= ./bla.png
--- imageCaption=Image of Terra nova
+-- title|=|Terra Nova
+-- imageURL|=|img/bla.png
+-- imageCaption|=|Image of Terra nova
 -- ---
--- heading=Characteristics
--- field=Radius=40k
--- field=Inhabitants=40 million
--- heading=Atmosphere
--- field=Surface pressure=2000Pa
+-- heading|=|Characteristics
+-- field|=|Radius|=|40k
+-- field|=|Inhabitants|=|40 <a href="units/million">million</a>
+-- heading|=|Atmosphere
+-- field|=|Surface pressure|=|2000Pa
 -- ~~~
 
 import Network.Gitit.Interface
@@ -35,22 +35,24 @@ getTitle :: String -> String
 getTitle metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "title") 
 
 getValueFromMetaDataLine :: String -> String
-getValueFromMetaDataLine metaDataLine = (splitOn "=" metaDataLine) !! 1
+getValueFromMetaDataLine metaDataLine = (splitOn "|=|" metaDataLine) !! 1
 
+-- "title=Terra Nova\nimage=img/bla.png\n…" "image" → "img/bla.png"
 getMetaDataLine :: String -> String -> String
-getMetaDataLine metaDataLines metaDataType =      -- "title=Terra Nova" 
-            unpack (head (filter -- ["title=Terra Nova"]
+getMetaDataLine metaDataLines metaDataType =
+            unpack (head (filter
                 (isPrefixOf (pack metaDataType))
-                (map pack (lines metaDataLines)) -- ["title=Terra Nova", "image=./bla.png", …]
+                (map pack (lines metaDataLines))
             ))
 
-getTableRows :: String -> String -- tableRowLines into HTML table rows
+-- tableRowLines into HTML table rows
+getTableRows :: String -> String
 getTableRows tableRowLines =
     concat (map getTableRow (filter (not . null) (lines tableRowLines)))
 
 
--- heading=Characteristics
--- field=Radius=40k
+-- heading|=|Characteristics
+-- field|=|Radius|=|40k
 getTableRow :: String -> String
 getTableRow tableRow
     | rowType == "heading" = "<tr><th class=\"heading\" colspan=\"2\">" ++ heading ++ "</th></tr>"
@@ -58,12 +60,12 @@ getTableRow tableRow
     | otherwise = "<tr><td>Could not interpret row:'" ++ tableRow ++ "'</td></tr>"
     where 
         rowType = (getTableRowType tableRow)
-        heading = (splitOn "=" tableRow) !! 1
-        label = (splitOn "=" tableRow) !! 1
-        value = (splitOn "=" tableRow) !! 2
+        heading = (splitOn "|=|" tableRow) !! 1
+        label = (splitOn "|=|" tableRow) !! 1
+        value = (splitOn "|=|" tableRow) !! 2
 
 getTableRowType :: String -> String
-getTableRowType tableRow = head (splitOn "=" tableRow)
+getTableRowType tableRow = head (splitOn "|=|" tableRow)
 
     -- return $ Table
     --     ("ttable", [], [])
