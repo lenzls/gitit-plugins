@@ -47,6 +47,7 @@ parse description =
 parseLine :: String -> InfoBoxData -> InfoBoxData
 parseLine lineString infoBoxData
     | rowType == "title" = infoBoxData { title = firstArg }
+    | rowType == "imageURL" = infoBoxData { imageURL = (Just firstArg) }
     | otherwise = infoBoxData
     where
         rowType = head (splitOn "|=|" lineString)
@@ -133,5 +134,5 @@ getTableRowType tableRow = head (splitOn "|=|" tableRow)
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
     traceShow (serializeInfoBoxData (parse (unpack contents)))
-    (Para [Str "Here will be table"])
+    (Para [Str contents])
 transformBlock x = x
