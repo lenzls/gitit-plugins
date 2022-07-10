@@ -80,48 +80,6 @@ serializeRowToHTML (FieldRowData label value) = "<tr><th>" ++ label ++ "</th><td
 plugin :: Plugin
 plugin = mkPageTransform transformBlock
 
-getImageURL :: String -> String
-getImageURL metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "imageURL") 
-
-getImageCaption :: String -> String
-getImageCaption metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "imageCaption") 
-
-getTitle :: String -> String
-getTitle metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "title") 
-
-getValueFromMetaDataLine :: String -> String
-getValueFromMetaDataLine metaDataLine = (splitOn "|=|" metaDataLine) !! 1
-
--- "title=Terra Nova\nimage=img/bla.png\n…" "image" → "img/bla.png"
-getMetaDataLine :: String -> String -> String
-getMetaDataLine metaDataLines metaDataType =
-            unpack (head (filter
-                (isPrefixOf (pack metaDataType))
-                (map pack (lines metaDataLines))
-            ))
-
--- tableRowLines into HTML table rows
-getTableRows :: String -> String
-getTableRows tableRowLines =
-    concat (map getTableRow (filter (not . null) (lines tableRowLines)))
-
-
--- heading|=|Characteristics
--- field|=|Radius|=|40k
-getTableRow :: String -> String
-getTableRow tableRow
-    | rowType == "heading" = "<tr><th class=\"heading\" colspan=\"2\">" ++ heading ++ "</th></tr>"
-    | rowType == "field" = "<tr><th>" ++ label ++ "</th><td>" ++ value ++ "</td></tr>"
-    | otherwise = "<tr><td>Could not interpret row:'" ++ tableRow ++ "'</td></tr>"
-    where 
-        rowType = (getTableRowType tableRow)
-        heading = (splitOn "|=|" tableRow) !! 1
-        label = (splitOn "|=|" tableRow) !! 1
-        value = (splitOn "|=|" tableRow) !! 2
-
-getTableRowType :: String -> String
-getTableRowType tableRow = head (splitOn "|=|" tableRow)
-
     -- return $ Table
     --     ("ttable", [], [])
     --     (Caption (Just [(Str "some caption")]) [])
@@ -156,6 +114,8 @@ getTableRowType tableRow = head (splitOn "|=|" tableRow)
     --     (TableFoot ("tfoot", [], []) [])
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
-    traceShow (parse (unpack contents))
-    serializeToHTML (parse (unpack contents))
+    traceShow parsed
+    serializeToHTML parsed
+    where
+        parsed = (parse (unpack contents))
 transformBlock x = x
