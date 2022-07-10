@@ -101,7 +101,7 @@ transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
     RawBlock "HTML" (pack (
     "<aside class=\"info-box\">\n" ++
-        "<h2>" ++ getTitle metaData ++ "</h2>\n" ++
+        "<h2 class=\"info-box-heading\">" ++ getTitle metaData ++ "</h2>\n" ++
         "<figure>\n" ++
             "<img src=\"" ++ getImageURL metaData ++ "\" />\n" ++
             "<figcaption>" ++ getImageCaption metaData ++ "</figcaption>\n" ++

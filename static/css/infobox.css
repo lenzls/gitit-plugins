@@ -6,3 +6,20 @@
 .info-box-table .heading {
     text-align: center;
 }
+
+.info-box {
+    background-color: #f8f9fa;
+    border: 1px solid #a2a9b1;
+    float: right;
+    margin-top: 0;
+    margin-bottom: 0.5;
+    margin-left: 0.8em;
+    margin-right: 0.8em;
+}
+
+.info-box-heading {
+    text-align: center;
+    padding: 0.2em 0;
+    margin: 0;
+    font-weight: bold;
+}
