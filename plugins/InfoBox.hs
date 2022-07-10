@@ -20,7 +20,38 @@ import Network.Gitit.Interface
 import Data.Char (toLower)
 import Data.Text (pack, unpack, isPrefixOf)
 import Data.List (concat)
+import Debug.Trace
 import Data.List.Split
+
+data InfoBoxData = InfoBoxData {
+    title :: String,
+    imageURL :: Maybe String,
+    imageCaption :: Maybe String,
+    tableRows :: [TableRowData]
+}
+data TableRowData = TableRowData {
+    rowType :: String,
+    label :: String,
+    value :: String
+}
+
+serializeInfoBoxData :: InfoBoxData -> String
+serializeInfoBoxData ibd = show (title ibd, imageURL ibd, imageCaption ibd)
+
+-- Parses a whole infobox description into an InfoBoxData
+parse :: String -> InfoBoxData
+parse description =
+    parseLine (head (lines description)) (InfoBoxData "" Nothing Nothing [])
+
+-- Parses a line and adds it to existing InfoBoxData
+parseLine :: String -> InfoBoxData -> InfoBoxData
+parseLine lineString infoBoxData
+    | rowType == "title" = infoBoxData { title = firstArg }
+    | otherwise = infoBoxData
+    where
+        rowType = head (splitOn "|=|" lineString)
+        firstArg = (splitOn "|=|" lineString) !! 1
+        secondArg = (splitOn "|=|" lineString) !! 2
 
 plugin :: Plugin
 plugin = mkPageTransform transformBlock
@@ -101,17 +132,6 @@ getTableRowType tableRow = head (splitOn "|=|" tableRow)
     --     (TableFoot ("tfoot", [], []) [])
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
-    RawBlock "HTML" (pack (
-    "<aside class=\"info-box\">\n" ++
-        "<h2>" ++ getTitle metaData ++ "</h2>\n" ++
-        "<figure>\n" ++
-            "<img src=\"" ++ getImageURL metaData ++ "\" />\n" ++
-            "<figcaption>" ++ getImageCaption metaData ++ "</figcaption>\n" ++
-        "</figure>\n" ++
-        "<table>\n" ++
-            (getTableRows tableRows) ++
-        "</table>" ++
-    "</aside>"))
-    where
-        [metaData, tableRows] = splitOn "---" (unpack contents)
+    traceShow (serializeInfoBoxData (parse (unpack contents)))
+    (Para [Str "Here will be table"])
 transformBlock x = x
