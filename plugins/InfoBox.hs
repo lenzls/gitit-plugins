@@ -20,52 +20,65 @@ import Network.Gitit.Interface
 import Data.Char (toLower)
 import Data.Text (pack, unpack, isPrefixOf)
 import Data.List (concat)
+import Debug.Trace
 import Data.List.Split
+
+data InfoBoxData = InfoBoxData {
+    title :: String,
+    imageURL :: Maybe String,
+    imageCaption :: Maybe String,
+    tableRows :: [TableRowData]
+} deriving Show 
+
+data TableRowData = HeadingRowData {
+    label :: String
+} | FieldRowData {
+    label :: String,
+    value :: String
+} deriving Show
+
+-- Parses a whole infobox description into an InfoBoxData
+parse :: String -> InfoBoxData
+parse description = parseLines (lines description)
+
+parseLines :: [String] -> InfoBoxData
+parseLines [] = (InfoBoxData "" Nothing Nothing [])
+parseLines (x:xs) = parseLine x (parseLines xs)
+
+-- Parses a line and adds it to existing InfoBoxData
+parseLine :: String -> InfoBoxData -> InfoBoxData
+parseLine lineString infoBoxData
+    | rowType == "title" = infoBoxData { title = firstArg }
+    | rowType == "imageURL" = infoBoxData { imageURL = (Just firstArg) }
+    | rowType == "imageCaption" = infoBoxData { imageCaption = (Just firstArg) }
+    | rowType == "heading" = infoBoxData { tableRows = [(HeadingRowData firstArg)] ++ (tableRows infoBoxData) }
+    | rowType == "field" = infoBoxData { tableRows = [(FieldRowData firstArg secondArg)] ++ (tableRows infoBoxData) }
+    | otherwise = infoBoxData
+    where
+        rowType = head (splitOn "|=|" lineString)
+        firstArg = (splitOn "|=|" lineString) !! 1
+        secondArg = (splitOn "|=|" lineString) !! 2
+
+serializeToHTML :: InfoBoxData -> Block
+serializeToHTML infoBoxData =
+    RawBlock "HTML" (pack (
+    "<aside class=\"info-box\">\n" ++
+        "<h2>" ++ title infoBoxData ++ "</h2>\n" ++
+        "<figure>\n" ++
+            (maybe "" (\x -> "<img src=\"" ++ x ++ "\" />\n") (imageURL infoBoxData)) ++
+            (maybe "" (\x -> "<figcaption>" ++ x ++ "</figcaption>\n") (imageCaption infoBoxData)) ++
+        "</figure>\n" ++
+        "<table>\n" ++
+            (concat (map serializeRowToHTML (tableRows infoBoxData))) ++
+        "</table>" ++
+    "</aside>"))
+
+serializeRowToHTML :: TableRowData -> String
+serializeRowToHTML (HeadingRowData label) = "<tr><th class=\"heading\" colspan=\"2\">" ++ label ++ "</th></tr>\n"
+serializeRowToHTML (FieldRowData label value) = "<tr><th>" ++ label ++ "</th><td>" ++ value ++ "</td></tr>\n"
 
 plugin :: Plugin
 plugin = mkPageTransform transformBlock
-
-getImageURL :: String -> String
-getImageURL metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "imageURL") 
-
-getImageCaption :: String -> String
-getImageCaption metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "imageCaption") 
-
-getTitle :: String -> String
-getTitle metaDataLines = getValueFromMetaDataLine (getMetaDataLine metaDataLines "title") 
-
-getValueFromMetaDataLine :: String -> String
-getValueFromMetaDataLine metaDataLine = (splitOn "|=|" metaDataLine) !! 1
-
--- "title=Terra Nova\nimage=img/bla.png\n…" "image" → "img/bla.png"
-getMetaDataLine :: String -> String -> String
-getMetaDataLine metaDataLines metaDataType =
-            unpack (head (filter
-                (isPrefixOf (pack metaDataType))
-                (map pack (lines metaDataLines))
-            ))
-
--- tableRowLines into HTML table rows
-getTableRows :: String -> String
-getTableRows tableRowLines =
-    concat (map getTableRow (filter (not . null) (lines tableRowLines)))
-
-
--- heading|=|Characteristics
--- field|=|Radius|=|40k
-getTableRow :: String -> String
-getTableRow tableRow
-    | rowType == "heading" = "<tr><th class=\"heading\" colspan=\"2\">" ++ heading ++ "</th></tr>"
-    | rowType == "field" = "<tr><th>" ++ label ++ "</th><td>" ++ value ++ "</td></tr>"
-    | otherwise = "<tr><td>Could not interpret row:'" ++ tableRow ++ "'</td></tr>"
-    where 
-        rowType = (getTableRowType tableRow)
-        heading = (splitOn "|=|" tableRow) !! 1
-        label = (splitOn "|=|" tableRow) !! 1
-        value = (splitOn "|=|" tableRow) !! 2
-
-getTableRowType :: String -> String
-getTableRowType tableRow = head (splitOn "|=|" tableRow)
 
     -- return $ Table
     --     ("ttable", [], [])
@@ -101,17 +114,8 @@ getTableRowType tableRow = head (splitOn "|=|" tableRow)
     --     (TableFoot ("tfoot", [], []) [])
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
-    RawBlock "HTML" (pack (
-    "<aside class=\"info-box\">\n" ++
-        "<h2>" ++ getTitle metaData ++ "</h2>\n" ++
-        "<figure>\n" ++
-            "<img src=\"" ++ getImageURL metaData ++ "\" />\n" ++
-            "<figcaption>" ++ getImageCaption metaData ++ "</figcaption>\n" ++
-        "</figure>\n" ++
-        "<table>\n" ++
-            (getTableRows tableRows) ++
-        "</table>" ++
-    "</aside>"))
+    traceShow parsed
+    serializeToHTML parsed
     where
-        [metaData, tableRows] = splitOn "---" (unpack contents)
+        parsed = (parse (unpack contents))
 transformBlock x = x
