@@ -79,7 +79,14 @@ serializeRowToHTML (FieldRowData label value) = "<tr><th>" ++ label ++ "</th><td
 serializeToBlock :: InfoBoxData -> Block
 serializeToBlock infoBoxData =
     Div ("", ["info-box"], []) [
-        Header 2 nullAttr [(Str . pack) (title infoBoxData)]
+        Header 2 nullAttr [(Str . pack) (title infoBoxData)],
+        SimpleFigure 
+            nullAttr
+            [Str (pack (maybe "" (\x -> x) (imageCaption infoBoxData)))]
+            (
+                pack (maybe "" (\x -> x) (imageURL infoBoxData)),
+                ""
+            )
     ]
 
 plugin :: Plugin
