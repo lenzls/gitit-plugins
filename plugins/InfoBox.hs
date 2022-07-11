@@ -8,7 +8,6 @@ module InfoBox (plugin) where
 -- title|=|Terra Nova
 -- imageURL|=|img/bla.png
 -- imageCaption|=|Image of Terra nova
--- ---
 -- heading|=|Characteristics
 -- field|=|Radius|=|40k
 -- field|=|Inhabitants|=|40 <a href="units/million">million</a>
