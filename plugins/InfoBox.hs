@@ -76,6 +76,12 @@ serializeRowToHTML :: TableRowData -> String
 serializeRowToHTML (HeadingRowData label) = "<tr><th class=\"heading\" colspan=\"2\">" ++ label ++ "</th></tr>\n"
 serializeRowToHTML (FieldRowData label value) = "<tr><th>" ++ label ++ "</th><td>" ++ value ++ "</td></tr>\n"
 
+serializeToBlock :: InfoBoxData -> Block
+serializeToBlock infoBoxData =
+    Div ("", ["info-box"], []) [
+        Header 2 ("", [], []) [(Str . pack) (title infoBoxData)]
+    ]
+
 plugin :: Plugin
 plugin = mkPageTransform transformBlock
 
@@ -114,7 +120,7 @@ plugin = mkPageTransform transformBlock
 transformBlock :: Block -> Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "infobox" `elem` classes =
     traceShow parsed
-    serializeToHTML parsed
+    serializeToBlock parsed
     where
         parsed = (parse (unpack contents))
 transformBlock x = x
