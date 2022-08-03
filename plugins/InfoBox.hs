@@ -3,6 +3,9 @@
 module InfoBox (plugin) where
 
 -- This plugin adds a wikipedia style InfoBox.
+--
+-- You can find the newest version of this plugin always at https://github.com/lenzls/gitit-plugins
+--
 -- Use like this:
 -- ~~~ {.infobox}
 -- title|=|Terra Nova
